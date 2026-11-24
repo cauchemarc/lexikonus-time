@@ -1,0 +1,44 @@
+<!doctype html>
+<!--
+  The page behind the bot's "Detect my time" button (TIME_PAGE_URL).
+
+  Telegram opens it inside the app. It reads the time zone the device is set to,
+  hands it to the bot through Telegram and closes. It reads nothing else, keeps
+  nothing and talks to no server: the only script it loads is Telegram's own.
+  Opened in a browser, it has nobody to tell and says so.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Lexikonus</title>
+  <style>
+    body { margin: 0; padding: 2rem 1.5rem; font: 16px/1.5 system-ui, sans-serif; text-align: center;
+           color: var(--tg-theme-text-color, #222); background: var(--tg-theme-bg-color, #fff); }
+  </style>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <p id="note">…</p>
+  <script>
+    (function () {
+      var note = document.getElementById("note");
+      var app = window.Telegram && window.Telegram.WebApp;
+      // Outside Telegram there is nobody to answer: its script is there, but knows no platform.
+      if (!app || !app.platform || app.platform === "unknown") {
+        note.textContent = "Open this page with the button in the bot. · Открой эту страницу кнопкой в боте.";
+        return;
+      }
+      var zone = null;
+      try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch (error) {}
+      app.ready();
+      // The zone by name where the device knows it; the minutes ahead of UTC right now in any case.
+      app.sendData(JSON.stringify({ tz: zone, offset: -new Date().getTimezoneOffset() }));
+      note.textContent = "✓";
+      // Telegram closes the page once the answer is sent; where it does not, do it ourselves.
+      setTimeout(function () { app.close(); }, 500);
+    })();
+  </script>
+</body>
+</html>
